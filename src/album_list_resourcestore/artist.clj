@@ -8,7 +8,7 @@
   (wcar* (car/smembers "artists")))
 
 (defn get-artist-name [id]
-  (str "artist" id))
+  (wcar* (car/get (str "artist:" id ":name"))))
 
 (defn get-artists-names-and-ids [ids]
   "Takes a list of artist ids as parameter and gets the names of the artists and returns a hash-map containing each artist's id and name"
@@ -21,3 +21,15 @@
 then gets the names of those artists from 'artist:id:name' STRINGs)"
   (let [ids (get-artist-ids)]
     (get-artists-names-and-ids ids)))
+
+(defn get-album-name [id]
+  (wcar* (car/get (str "album:" id ":name"))))
+
+(defn get-album-ids [artist-id]
+  (wcar* (car/smembers (str "artist:" artist-id ":albums"))))
+
+(defn get-albums-from-artist [artist-id]
+  "returns albums that the artist has made as array of albums with id and name (in redis gets an album SET from 'artist:id:albums' and names of those albums from 'album:id:name' STRINGs)"
+  (let [album-ids (get-album-ids artist-id)]
+    (map #(hash-map :id %, :name (get-album-name %))
+         album-ids)))

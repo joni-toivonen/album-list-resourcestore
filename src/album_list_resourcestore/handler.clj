@@ -33,7 +33,8 @@
 
       (GET "/artists/:artistId" []
            :path-params [artistId :- s/Int]
-           :summary "returns albums that the artist has made as array of albums with id and name (in redis gets an album SET from 'artist:id:albums' and names of those albums from 'album:id:name' STRINGs)")
+           :summary "returns albums that the artist has made as array of albums with id and name (in redis gets an album SET from 'artist:id:albums' and names of those albums from 'album:id:name' STRINGs)"
+           (ok (artist/get-albums-from-artist artistId)))
 
       (PUT "/artists/:artistId" []
            :path-params [artistId :- s/Int])
