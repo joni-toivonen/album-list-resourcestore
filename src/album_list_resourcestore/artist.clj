@@ -33,3 +33,10 @@ then gets the names of those artists from 'artist:id:name' STRINGs)"
   (let [album-ids (get-album-ids artist-id)]
     (map #(hash-map :id %, :name (get-album-name %))
          album-ids)))
+
+(defn create-artist [artist-name]
+  "creates new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name. Returns the created artist's id")
+
+(defn add-album-to-artist [artist-id album-id]
+  "adds albumId to the 'artist:id:albums' SET"
+  (car/sadd (str "artist:" artist-id ":albums") album-id))
