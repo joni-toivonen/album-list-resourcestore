@@ -7,10 +7,20 @@
 
 (s/defschema Album
   "A schema for album"
-  {(s/optional-key :id) s/Int
+  {:id s/Int
    :name s/Str
-   (s/optional-key :artist) s/Str
-   (s/optional-key :artist-id) s/Int
+   :artist s/Str
+   :artist-id s/Int
+   :format [s/Str]
+   :label s/Str
+   :year s/Int
+   (s/optional-key :extra) s/Str
+   :songs [s/Str]})
+
+(s/defschema NewAlbum
+  "A schema for album that the user has POSTed"
+  {:name s/Str
+   :artist-id s/Int
    :format [s/Str]
    :label s/Str
    :year s/Int
@@ -59,6 +69,6 @@
 
       (POST "/albums" []
             :return Album
-            :body [album Album]
+            :body [album NewAlbum]
             :summary "adds an album to the database and also the artist if it does not exist yet (in redis adds an album hash with given data as 'album:id'. Then in redis gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' strings and sees if the artist name in the body exists. If it does, then pushes the created albumId to the 'artist:id:albums' SET. Else creates new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name and then pushes the created albumId to the 'artist:id:albums' SET)"
-            (ok (post-album Album))))))
+            (ok (post-album album))))))
