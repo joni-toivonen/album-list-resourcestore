@@ -1,6 +1,7 @@
 (ns album-list-resourcestore.album
-  (:require [album-list-resourcestore.artist :refer [create-artist add-album-to-artist]]
-            [taoensso.carmine :as car :refer (wcar)]))
+  (:require [taoensso.carmine :as car :refer (wcar)]
+            [clojure.string]
+            [album-list-resourcestore.artist :as artist :refer (get-artist-name)]))
 
 (def server1-conn {:pool {} :spec {:uri "redis://127.0.0.1:6379/"}})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
@@ -8,9 +9,57 @@
 (defn generate-album-id []
   (wcar* (car/incr "album:id")))
 
+(defn handle-multiple-items [index-of-first-item album-vector vector-string]
+  (let [album-keys (take-nth 2 album-vector)
+        album-values (take-nth 2 (rest album-vector))
+        index-of-last-item (.lastIndexOf
+                            (mapv #(clojure.string/includes? % vector-string)
+                                  album-keys)
+                            true)
+        items (mapv #(nth album-values %) (range index-of-first-item
+                                                 (inc index-of-last-item)))]
+    [(keyword vector-string) items]))
+
+(defn convert-value-to-integer [album-vector key]
+  (vector
+   (keyword key)
+   (Integer/parseInt (get album-vector
+                          (inc (.indexOf
+                                album-vector
+                                key))))))
+
+(defn should-be-integer-value [key]
+  (if (or (= key "id")
+          (= key "artist-id")
+          (= key "year")) true false))
+
+(defn create-key-value-vector [key album-vector]
+  (cond
+    (and (clojure.string/includes? key "songs")
+         (= key "songs0")) (handle-multiple-items
+                           (.indexOf (into [] (take-nth 2 album-vector)) key)
+                           album-vector "songs")
+    (and (clojure.string/includes? key "formats")
+         (= key "formats0")) (handle-multiple-items
+                             (.indexOf (into [] (take-nth 2 album-vector)) key)
+                             album-vector "formats")
+    (and (should-be-integer-value key)) (convert-value-to-integer album-vector key)
+    (and (not (clojure.string/includes? key "songs"))
+         (not (clojure.string/includes? key "formats"))) (vector
+                                                         (keyword key)
+                                                         (get album-vector
+                                                              (inc (.indexOf
+                                                                    album-vector
+                                                                    key))))))
+
+(defn convert-vector-to-hashmap [album-vector]
+  (into (hash-map)
+        (map #(create-key-value-vector % album-vector)
+             (take-nth 2 album-vector))))
+
 (defn get-album [album-id]
   "returns the information of the requested album (in redis gets an album HASH from 'album:id')"
-  (wcar* (car/hgetall (str "album:" album-id))))
+  (convert-vector-to-hashmap (wcar* (car/hgetall (str "album:" album-id)))))
 
 (defn get-artists-names [ids]
   (wcar* (mapv #(car/get (str "artist:" % ":name")) ids)))
@@ -19,7 +68,7 @@
   (into [] (map #(vector (str (name key) (.indexOf album-vector %)) %) album-vector)))
 
 (defn get-album-key-value-as-string [album key]
-  (if (or (= (name key) "format")
+  (if (or (= (name key) "formats")
           (= (name key) "songs"))
     (create-key-values-from-vector key (get album key))
     (vector (name key) (get album key))))
@@ -27,7 +76,9 @@
 (defn get-album-data-as-list [album album-id]
   (flatten
    (cons (str "album:" album-id)
-         (into [] (map #(get-album-key-value-as-string album %) (keys album))))))
+         (cons
+          ["id" album-id "artist" (get-artist-name (get album :artist-id))]
+          (into [] (map #(get-album-key-value-as-string album %) (keys album)))))))
 
 (defn add-album [album album-id]
   (wcar* (apply car/hmset

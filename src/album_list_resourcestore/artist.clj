@@ -4,6 +4,9 @@
 (def server1-conn {:pool {} :spec {:uri "redis://127.0.0.1:6379/"}})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
+(defn generate-artist-id []
+  (wcar* (car/incr "artist:id")))
+
 (defn get-artist-ids []
   (wcar* (car/smembers "artists")))
 
@@ -34,9 +37,14 @@ then gets the names of those artists from 'artist:id:name' STRINGs)"
     (map #(hash-map :id %, :name (get-album-name %))
          album-ids)))
 
-(defn create-artist [artist-name]
-  "creates new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name. Returns the created artist's id")
+(defn add-artist [artist-id artist-name]
+  (wcar* (car/sadd "artists" artist-id)
+         (car/set (str "artist:" artist-id ":name") artist-name)))
 
-(defn add-album-to-artist [artist-id album-id]
-  "adds albumId to the 'artist:id:albums' SET"
-  (car/sadd (str "artist:" artist-id ":albums") album-id))
+(defn post-artist [artist]
+  "creates new artistId using car/incr 'artist:id' and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Returns the created artist's id"
+  (let [artist-id (generate-artist-id)
+        artist-name (get artist :name)]
+    (add-artist artist-id artist-name)
+    {:id artist-id :name artist-name}))
+

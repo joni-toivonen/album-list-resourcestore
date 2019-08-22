@@ -1,5 +1,5 @@
 (ns album-list-resourcestore.handler
-  (:require [album-list-resourcestore.artist :as artist :refer [get-artists get-albums-from-artist]]
+  (:require [album-list-resourcestore.artist :as artist :refer [get-artists get-albums-from-artist post-artist]]
             [album-list-resourcestore.album :as album :refer [get-album post-album]]
             [compojure.api.sweet :refer :all]
             [ring.util.http-response :refer :all]
@@ -11,7 +11,7 @@
    :name s/Str
    :artist s/Str
    :artist-id s/Int
-   :format [s/Str]
+   :formats [s/Str]
    :label s/Str
    :year s/Int
    (s/optional-key :extra) s/Str
@@ -21,11 +21,20 @@
   "A schema for album that the user has POSTed"
   {:name s/Str
    :artist-id s/Int
-   :format [s/Str]
+   :formats [s/Str]
    :label s/Str
    :year s/Int
    (s/optional-key :extra) s/Str
    :songs [s/Str]})
+
+(s/defschema Artist
+  "A schema for artist"
+  {:id s/Int
+   :name s/Str})
+
+(s/defschema NewArtist
+  "A schema for artist that the user has POSTed"
+  {:name s/Str})
 
 (def app
   (api
@@ -42,6 +51,12 @@
       (GET "/artists" []
            :summary "returns a list of all artists as array of artists with id and name (in redis first gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' STRINGs)"
            (ok (get-artists)))
+
+      (POST "/artists" []
+            :return Artist
+            :body [artist NewArtist]
+            :summary "creates new artistId using car/incr 'artist:id' and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Returns the created artist's id"
+            (ok (post-artist artist)))
 
       (GET "/artists/:artistId" []
            :path-params [artistId :- s/Int]
