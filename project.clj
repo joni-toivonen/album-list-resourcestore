@@ -2,7 +2,8 @@
   :description "REST backend that takes requests via HTTP and stores music album list data in Redis database"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [metosin/compojure-api "1.1.11"]
-                 [com.taoensso/carmine "2.19.1"]]
+                 [com.taoensso/carmine "2.19.1"]
+                 [environ "1.1.0"]]
   :ring {:handler album-list-resourcestore.handler/app}
   :uberjar-name "server.jar"
   :profiles {:dev {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]
