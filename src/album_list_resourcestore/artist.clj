@@ -1,7 +1,8 @@
 (ns album-list-resourcestore.artist
-  (:require [taoensso.carmine :as car :refer (wcar)]))
+  (:require [taoensso.carmine :as car :refer (wcar)]
+            [environ.core :refer [env]]))
 
-(def server1-conn {:pool {} :spec {:uri "redis://127.0.0.1:6379/"}})
+(def server1-conn {:pool {} :spec {:uri (str "redis://" (env :redis-host) ":6379/")}})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
 (defn generate-artist-id []
