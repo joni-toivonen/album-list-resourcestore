@@ -31,6 +31,7 @@ services:
       KONG_PG_HOST: kong-db
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
       KONG_PG_USER: ${KONG_PG_USER:-kong}
+      KONG_TRUSTED_IPS: 0.0.0.0/0,::/0
     networks:
       - kong-net
     deploy:
@@ -46,6 +47,7 @@ services:
       KONG_PG_HOST: kong-db
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
       KONG_PG_USER: ${KONG_PG_USER:-kong}
+      KONG_TRUSTED_IPS: 0.0.0.0/0,::/0
     networks:
       - kong-net
     deploy:
@@ -58,7 +60,7 @@ services:
     environment:
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: '127.0.0.1:8001'
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
       KONG_CASSANDRA_CONTACT_POINTS: kong-db
       KONG_DATABASE: postgres
       KONG_PG_DATABASE: ${KONG_PG_DATABASE:-kong}
@@ -67,12 +69,17 @@ services:
       KONG_PG_USER: ${KONG_PG_USER:-kong}
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
+    hostname: kong
     networks:
-      - kong-net
-      - resourcestore-net
+      resourcestore-net:
+      kong-net:
+        aliases:
+          - kong
     ports:
-      - "8000:8000/tcp"
-      - "8443:8443/tcp"
+      - "80:8000/tcp"
+      - "443:8443/tcp"
+    expose:
+      - "8001"
     depends_on:
       - kong-db
     deploy:
@@ -84,12 +91,29 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+  kong-certbot-agent:
+    image: phpdockerio/kong-certbot-agent:latest
+    environment:
+      - KONG_ENDPOINT=kong:8001
+      - EMAIL=FIXME
+      - DOMAINS=FIXME
+    depends_on:
+      - kong
+    hostname: kong-certbot-agent
+    expose:
+      - "80"
+      - "443"
+    networks:
+      kong-net:
+        aliases:
+          - kong-certbot-agent
   kong-db:
     image: postgres:9.5
     environment:
       POSTGRES_DB: ${KONG_PG_DATABASE:-kong}
       POSTGRES_PASSWORD: ${KONG_PG_PASSWORD:-kong}
       POSTGRES_USER: ${KONG_PG_USER:-kong}
+    hostname: kong-db
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}"]
       interval: 30s
@@ -98,7 +122,9 @@ services:
     stdin_open: true
     tty: true
     networks:
-      - kong-net
+      kong-net:
+        aliases:
+          - kong-db
     volumes:
       - kong_data:/var/lib/postgresql/data
     deploy:

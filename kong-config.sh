@@ -15,3 +15,7 @@ $DOCKER exec -it $CONTAINER_ID curl -i -X POST --url http://localhost:8001/servi
 
 $DOCKER exec -it $CONTAINER_ID curl -i -X POST --url http://localhost:8001/consumers/ --data "username=AlbumLister"
 $DOCKER exec -it $CONTAINER_ID curl -i -X POST --url http://localhost:8001/consumers/AlbumLister/key-auth/ --data ''
+
+$DOCKER exec -it $CONTAINER curl -i -X POST --url http://localhost:8001/services/ --data 'name=KongCertbot' --data 'url=http://kong-certbot-agent:80'
+$DOCKER exec -it $CONTAINER curl -i -X POST --url http://localhost:8001/services/KongCertbot/routes -H 'Content-Type: application/json' \
+--data '{"hosts": ["FIXME"], "methods": ["GET"], "protocols": ["http"], "paths": ["/.well-known/acme-challenge"], "strip_path": false}'
