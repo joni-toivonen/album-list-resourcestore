@@ -1,13 +1,14 @@
 (ns album-list-resourcestore.handler
   (:require [album-list-resourcestore.artist :as artist :refer [get-artists get-albums-from-artist post-artist]]
             [album-list-resourcestore.album :as album :refer [get-album post-album]]
+            [album-list-resourcestore.event :as event :refer [get-events]]
             [compojure.api.sweet :refer :all]
             [ring.util.http-response :refer :all]
             [schema.core :as s]))
 
 (s/defschema Album
   "A schema for album"
-  {:id s/Int
+  {:id s/Uuid
    :name s/Str
    :artist s/Str
    :artist-id s/Int
@@ -17,24 +18,10 @@
    (s/optional-key :extra) s/Str
    :songs [s/Str]})
 
-(s/defschema NewAlbum
-  "A schema for album that the user has POSTed"
-  {:name s/Str
-   :artist-id s/Int
-   :formats [s/Str]
-   :label s/Str
-   :year s/Int
-   (s/optional-key :extra) s/Str
-   :songs [s/Str]})
-
 (s/defschema Artist
   "A schema for artist"
-  {:id s/Int
+  {:id s/Uuid
    :name s/Str})
-
-(s/defschema NewArtist
-  "A schema for artist that the user has POSTed"
-  {:name s/Str})
 
 (def app
   (api
@@ -48,13 +35,21 @@
     (context "/api" []
       :tags ["api"]
 
+      (GET "/events" []
+           (ok (get-events)))
+
+      (GET "/events/:eventId" []
+           :path-params [eventId :- s/Int]
+           (s/validate (s/pred pos?) eventId)
+           (ok (get-events eventId)))
+
       (GET "/artists" []
            :summary "returns a list of all artists as array of artists with id and name (in redis first gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' STRINGs)"
            (ok (get-artists)))
 
       (POST "/artists" []
             :return Artist
-            :body [artist NewArtist]
+            :body [artist Artist]
             :summary "creates new artistId using car/incr 'artist:id' and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Returns the created artist's id"
             (ok (post-artist artist)))
 
@@ -84,6 +79,6 @@
 
       (POST "/albums" []
             :return Album
-            :body [album NewAlbum]
+            :body [album Album]
             :summary "adds an album to the database and also the artist if it does not exist yet (in redis adds an album hash with given data as 'album:id'. Then in redis gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' strings and sees if the artist name in the body exists. If it does, then pushes the created albumId to the 'artist:id:albums' SET. Else creates new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name and then pushes the created albumId to the 'artist:id:albums' SET)"
             (ok (post-album album))))))
