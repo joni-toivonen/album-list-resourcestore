@@ -9,7 +9,8 @@
   (wcar* (car/incr "event:id")))
 
 (defn get-latest-event-id []
-  (Integer/parseInt (wcar* (car/get "event:id"))))
+  (let [event-id (wcar* (car/get "event:id"))]
+    (if event-id (Integer/parseInt event-id) event-id)))
 
 (defn get-event [event-id]
   (wcar* (car/parse-map (car/hgetall (str "event:" event-id)))))
