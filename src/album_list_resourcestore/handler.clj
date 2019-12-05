@@ -11,7 +11,7 @@
   {:id s/Uuid
    :name s/Str
    :artist s/Str
-   :artist-id s/Int
+   :artist-id s/Uuid
    :formats [s/Str]
    :label s/Str
    :year s/Int
@@ -54,17 +54,17 @@
             (ok (post-artist artist)))
 
       (GET "/artists/:artistId" []
-           :path-params [artistId :- s/Int]
+           :path-params [artistId :- s/Uuid]
            :summary "returns albums that the artist has made as array of albums with id and name (in redis gets an album SET from 'artist:id:albums' and names of those albums from 'album:id:name' STRINGs)"
            (ok (get-albums-from-artist artistId)))
 
       (PUT "/artists/:artistId" []
-           :path-params [artistId :- s/Int])
+           :path-params [artistId :- s/Uuid])
 
       (GET "/albums/:albumId" []
            :responses {200 {:schema Album}
                        404 {}}
-           :path-params [albumId :- s/Int]
+           :path-params [albumId :- s/Uuid]
            :summary "returns the information of the requested album (in redis gets an album HASH from 'album:id')"
            (let [album (get-album albumId)]
              (if (empty? album)
@@ -73,7 +73,7 @@
 
       (PUT "/albums/:albumId" []
            :return Album
-           :path-params [albumId :- s/Int]
+           :path-params [albumId :- s/Uuid]
            :body [album Album]
            :summary "updates an album in the database and also adds an artist if it does not exist yet (in redis gets the album HASH from 'album:id' and compares if the artist is updated. If it is, then removes the album id from 'artist:id:albums' and adds it to the correct artist's SET if it exists. If the updated artist name does not exist in 'artist:id:name' then creates a new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Also if the album name has changed, updates the old name STRING 'album:id:name'. After that it updates the HASH with given data.)")
 
