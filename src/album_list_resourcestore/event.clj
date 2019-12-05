@@ -20,12 +20,12 @@
    (let [latest-event-id (get-latest-event-id)]
      (if latest-event-id
        (map #(get-event %) (range 1 (inc latest-event-id)))
-       {:status 204})))
+       [])))
   ([event-id]
    (let [latest-event-id (get-latest-event-id)]
      (if latest-event-id
        (map #(get-event %) (range (inc event-id) (inc latest-event-id)))
-       {:status 204}))))
+       []))))
 
 (defn add-event [event-type event-data]
   (let [event-id (generate-event-id)]
