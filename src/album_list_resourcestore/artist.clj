@@ -1,12 +1,10 @@
 (ns album-list-resourcestore.artist
   (:require [taoensso.carmine :as car :refer (wcar)]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [album-list-resourcestore.event :as event :refer [add-event]]))
 
 (def server1-conn {:pool {} :spec {:uri (str "redis://" (env :redis-host) ":6379/")}})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
-
-(defn generate-artist-id []
-  (wcar* (car/incr "artist:id")))
 
 (defn get-artist-ids []
   (wcar* (car/smembers "artists")))
@@ -38,14 +36,13 @@ then gets the names of those artists from 'artist:id:name' STRINGs)"
     (map #(hash-map :id %, :name (get-album-name %))
          album-ids)))
 
-(defn add-artist [artist-id artist-name]
+(defn add-artist [artist]
+  (let [artist-id (get artist :id)]
   (wcar* (car/sadd "artists" artist-id)
-         (car/set (str "artist:" artist-id ":name") artist-name)))
+         (car/set (str "artist:" artist-id ":name") (get artist :name)))))
 
 (defn post-artist [artist]
   "creates new artistId using car/incr 'artist:id' and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Returns the created artist's id"
-  (let [artist-id (generate-artist-id)
-        artist-name (get artist :name)]
-    (add-artist artist-id artist-name)
-    {:id artist-id :name artist-name}))
-
+    (add-event "Add artist" artist)
+    (add-artist artist)
+    artist)
