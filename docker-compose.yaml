@@ -94,7 +94,7 @@ services:
   kong-certbot-agent:
     image: phpdockerio/kong-certbot-agent:latest
     environment:
-      - KONG_ENDPOINT=kong:8001
+      - KONG_ENDPOINT=http://kong:8001
       - EMAIL=FIXME
       - DOMAINS=FIXME
     depends_on:
