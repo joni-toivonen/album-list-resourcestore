@@ -13,10 +13,10 @@
    :artist s/Str
    :artist-id s/Uuid
    :formats [s/Str]
-   :label s/Str
-   :year s/Int
+   (s/optional-key :label) s/Str
+   (s/optional-key :year) s/Int
    (s/optional-key :extra) s/Str
-   :songs [s/Str]})
+   (s/optional-key :songs) [s/Str]})
 
 (s/defschema Artist
   "A schema for artist"
