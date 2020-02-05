@@ -3,12 +3,12 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [metosin/compojure-api "1.1.11"]
                  [com.taoensso/carmine "2.19.1"]
+                 [cheshire "5.5.0"]
+                 [clj-http "3.10.0"]
                  [environ "1.1.0"]]
   :ring {:handler album-list-resourcestore.handler/app}
   :uberjar-name "server.jar"
   :profiles {:dev {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]
-                                  [cheshire "5.5.0"]
-                                  [clj-http "3.10.0"]
                                   [ring/ring-mock "0.3.0"]
                                   [midje "1.8.3"]]
                    :plugins [[lein-ring "0.12.0"]
