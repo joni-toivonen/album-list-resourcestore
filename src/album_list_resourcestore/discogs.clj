@@ -5,7 +5,8 @@
 
 (defn get-resource [url]
   (let [search-result (cheshire/parse-string (get (client/get url) :body))]
-    {:label (get (first (get search-result "labels")) "name")
+    {:name (get search-result "title")
+     :label (get (first (get search-result "labels")) "name")
      :year (get search-result "year")
      :songs (map #(get % "title") (get search-result "tracklist"))}))
 
