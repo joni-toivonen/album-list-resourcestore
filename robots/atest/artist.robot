@@ -50,3 +50,14 @@ Get Existing Artist That Has Albums
     Should Be Equal As Strings    ${response.status_code}    200
     Should Be Equal As Strings    ${response.json()[0]["id"]}    ${albumdict.id}
     Should Be Equal As Strings    ${response.json()[0]["name"]}    ${albumdict.name}
+
+Get Album From Artist
+    ${albumdict} =    Create Dictionary    id=${albumuuid}    name=testalbum    artist=test    artistId=${artistuuid}    formats=cd
+    Create Session    resourcestore    ${url}
+    ${response} =    Get Request    resourcestore    /api/albums/${albumuuid}
+    Should Be Equal As Strings    ${response.status_code}    200
+    Should Be Equal As Strings    ${response.json()["id"]}    ${albumdict.id}
+    Should Be Equal As Strings    ${response.json()["name"]}    ${albumdict.name}
+    Should Be Equal As Strings    ${response.json()["artist"]}    ${albumdict.artist}
+    Should Be Equal As Strings    ${response.json()["artist-id"]}    ${albumdict.artistId}
+    Should Be Equal As Strings    ${response.json()["formats"][0]}    ${albumdict.formats}
