@@ -9,7 +9,7 @@ ${ALBUM UUID} =    8458841a-9adc-4bca-82a3-2393dc28a2e4
 
 *** Test Cases ***
 Get Non-existing Artist
-    Create Session    resourcestore    ${SERVER URL}
+    Create Session    resourcestore    ${SERVER URL}    max_retries=5    backoff_factor=1.0
     ${RESPONSE} =    Get Request    resourcestore    /api/artists/${ARTIST UUID}
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
     Should Be Equal As Strings    ${RESPONSE.json()}    []
