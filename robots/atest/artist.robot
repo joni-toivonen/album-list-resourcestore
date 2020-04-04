@@ -31,6 +31,13 @@ Get Artist List
     Should Be Equal As Strings    ${RESPONSE.json()[0]["id"]}    ${ARTIST.id}
     Should Be Equal As Strings    ${RESPONSE.json()[0]["name"]}    ${ARTIST.name}
 
+Get Events List After One Post
+    Create Session    resourcestore    ${SERVER URL}
+    ${RESPONSE} =    Get Request    resourcestore    /api/events
+    ${AMOUNT OF EVENTS} =    Evaluate    len(${RESPONSE.json()})
+    Should Be Equal As Strings    ${RESPONSE.status_code}    200
+    Should Be Equal As Integers    ${AMOUNT OF EVENTS}    1
+
 Get Existing Artist That Has No Albums
     Create Session    resourcestore    ${SERVER URL}
     ${RESPONSE} =    Get Request    resourcestore    /api/artists/${ARTIST UUID}
@@ -43,6 +50,13 @@ Post New Album For Artist
     Create Session    resourcestore    ${SERVER URL}    headers=${HEADERS}
     ${RESPONSE} =    Post Request    resourcestore    /api/albums    data=${ALBUM DATA}
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
+
+Get Events List After Two Posts
+    Create Session    resourcestore    ${SERVER URL}
+    ${RESPONSE} =    Get Request    resourcestore    /api/events
+    ${AMOUNT OF EVENTS} =    Evaluate    len(${RESPONSE.json()})
+    Should Be Equal As Strings    ${RESPONSE.status_code}    200
+    Should Be Equal As Integers    ${AMOUNT OF EVENTS}    2
 
 Get Existing Artist That Has Albums
     &{ALBUM} =    Create Dictionary    id=${ALBUM UUID}    name=testalbum
