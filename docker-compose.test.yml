@@ -1,0 +1,48 @@
+version: "3.4"
+services:
+  app:
+    build: .
+    image: album-list-resourcestore:latest
+    container_name: album-list-resourcestore-test
+    environment:
+      - REDIS_HOST=test-redis
+      - DISCOGS_TOKEN=FIXME
+    hostname: test-resourcestore
+    networks:
+      redis-net:
+      resourcestore-net:
+        aliases:
+          - test-resourcestore
+    depends_on:
+      - test-redis
+
+  test-redis:
+    image: redis:4.0.5-alpine
+    container_name: album-list-resourcestore-test-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: test-redis
+    networks:
+      - redis-net
+    volumes:
+      - test-redis-data:/data
+
+  app-robot:
+    build:
+      context: ./robots
+      dockerfile: Dockerfile
+    image: album-list-resourcestore-robot:latest
+    container_name: album-list-resourcestore-test-robot
+    environment:
+      - RESOURCESTORE_HOST=test-resourcestore
+    networks:
+      resourcestore-net:
+    depends_on:
+      - app
+
+networks:
+  redis-net:
+  resourcestore-net:
+
+volumes:
+  test-redis-data:
+    name: album-list-resourcestore-test-redis-data
