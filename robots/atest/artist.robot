@@ -37,6 +37,7 @@ Get Events List After One Post
     ${AMOUNT OF EVENTS} =    Evaluate    len(${RESPONSE.json()})
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
     Should Be Equal As Integers    ${AMOUNT OF EVENTS}    1
+    Should Be Equal As Strings    ${RESPONSE.json()[0]["event-type"]}    Add artist
 
 Get Existing Artist That Has No Albums
     Create Session    resourcestore    ${SERVER URL}
@@ -57,6 +58,17 @@ Get Events List After Two Posts
     ${AMOUNT OF EVENTS} =    Evaluate    len(${RESPONSE.json()})
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
     Should Be Equal As Integers    ${AMOUNT OF EVENTS}    2
+    Should Be Equal As Strings    ${RESPONSE.json()[1]["event-type"]}    Add album
+
+Get Events After First Event
+    Create Session    resourcestore    ${SERVER URL}
+    ${RESPONSE} =    Get Request    resourcestore    /api/events
+    ${FIRST EVENT ID} =    Set Variable    ${RESPONSE.json()[0]["event-id"]}
+    ${LATEST EVENTS} =    Get Request    resourcestore    /api/events/${FIRST EVENT ID}
+    ${AMOUNT OF EVENTS} =    Evaluate    len(${LATEST EVENTS.json()})
+    Should Be Equal As Strings    ${LATEST EVENTS.status_code}    200
+    Should Be Equal As Integers    ${AMOUNT OF EVENTS}    1
+    Should Be Equal As Strings    ${LATEST EVENTS.json()[0]["event-type"]}    Add album
 
 Get Existing Artist That Has Albums
     &{ALBUM} =    Create Dictionary    id=${ALBUM UUID}    name=testalbum
