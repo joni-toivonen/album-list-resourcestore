@@ -41,3 +41,14 @@ Get Events After Updating Existing Album
     ${RESPONSE} =    Get Request    resourcestore    /api/events/${LATEST EVENT ID}
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
     Should Be Equal As Strings    ${RESPONSE.json()[0]["event-id"]}    3
+
+Getting Updated Album Should Return Album With Updated Data
+    ${ALBUM} =    Create Dictionary    id=${ALBUM UUID}    name=testalbum2    artist=test    artistId=${ARTIST UUID}    formats=cd
+    Create Session    resourcestore    ${SERVER URL}
+    ${RESPONSE} =    Get Request    resourcestore    /api/albums/${ALBUM UUID}
+    Should Be Equal As Strings    ${RESPONSE.status_code}    200
+    Should Be Equal As Strings    ${RESPONSE.json()["id"]}    ${ALBUM.id}
+    Should Be Equal As Strings    ${RESPONSE.json()["name"]}    ${ALBUM.name}
+    Should Be Equal As Strings    ${RESPONSE.json()["artist"]}    ${ALBUM.artist}
+    Should Be Equal As Strings    ${RESPONSE.json()["artist-id"]}    ${ALBUM.artistId}
+    Should Be Equal As Strings    ${RESPONSE.json()["formats"][0]}    ${ALBUM.formats}
