@@ -25,9 +25,7 @@ Getting Events With Latest Event Id Should Return Empty List Of Events
     ${LATEST EVENT ID} =    Convert To String    ${LOCAL DATABASE[1]["event-id"]}
     ${RESPONSE} =    Get Request    resourcestore    /api/events/${LATEST EVENT ID}
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
-    ${LOCAL DATABASE}    Set Variable    ${RESPONSE.json()}
     Should Be Equal As Strings    ${RESPONSE.json()}    []
-    Set Global Variable    ${LOCAL DATABASE}
 
 Put Request With Existing Album Id Should Update Existing Album With Given Data
     ${ALBUM DATA} =    Set Variable    {"id": "${ALBUM UUID}", "name": "testalbum2", "artist": "test", "artist-id": "${ARTIST UUID}", "formats": ["cd"]}
@@ -42,6 +40,4 @@ Get Events After Updating Existing Album
     ${LATEST EVENT ID} =    Convert To String    ${LOCAL DATABASE[1]["event-id"]}
     ${RESPONSE} =    Get Request    resourcestore    /api/events/${LATEST EVENT ID}
     Should Be Equal As Strings    ${RESPONSE.status_code}    200
-    ${LOCAL DATABASE}    Set Variable    ${RESPONSE.json()}
     Should Be Equal As Strings    ${RESPONSE.json()[0]["event-id"]}    3
-    Set Global Variable    ${LOCAL DATABASE}
