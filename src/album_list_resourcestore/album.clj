@@ -75,3 +75,14 @@
                                     (keys album)))))
   (add-album album)
   album)
+
+(defn album-exists? [album-id]
+  (= 1 (wcar* (car/exists (str "album:" album-id)))))
+
+(defn put-album [album]
+  (add-event "Update album"
+             (apply hash-map (flatten
+                              (mapv #(get-album-key-value-as-string album %)
+                                    (keys album)))))
+  (add-album album)
+  album)

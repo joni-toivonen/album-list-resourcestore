@@ -1,6 +1,6 @@
 (ns album-list-resourcestore.handler
   (:require [album-list-resourcestore.artist :as artist :refer [get-artists get-albums-from-artist post-artist]]
-            [album-list-resourcestore.album :as album :refer [get-album post-album]]
+            [album-list-resourcestore.album :as album :refer [get-album post-album put-album album-exists?]]
             [album-list-resourcestore.event :as event :refer [get-events]]
             [album-list-resourcestore.discogs :as discogs :refer [search]]
             [compojure.api.sweet :refer :all]
@@ -73,10 +73,14 @@
                (ok (get-album albumId)))))
 
       (PUT "/albums/:albumId" []
-           :return Album
+           :responses {200 {:schema Album}
+                       404 {}}
            :path-params [albumId :- s/Uuid]
            :body [album Album]
-           :summary "updates an album in the database and also adds an artist if it does not exist yet (in redis gets the album HASH from 'album:id' and compares if the artist is updated. If it is, then removes the album id from 'artist:id:albums' and adds it to the correct artist's SET if it exists. If the updated artist name does not exist in 'artist:id:name' then creates a new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Also if the album name has changed, updates the old name STRING 'album:id:name'. After that it updates the HASH with given data.)")
+           :summary "updates an album in the database and also adds an artist if it does not exist yet (in redis gets the album HASH from 'album:id' and compares if the artist is updated. If it is, then removes the album id from 'artist:id:albums' and adds it to the correct artist's SET if it exists. If the updated artist name does not exist in 'artist:id:name' then creates a new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Also if the album name has changed, updates the old name STRING 'album:id:name'. After that it updates the HASH with given data.)"
+           (if (album-exists? albumId)
+             (ok (put-album album))
+             (not-found (str "No such album with id " albumId))))
 
       (POST "/albums" []
             :return Album
