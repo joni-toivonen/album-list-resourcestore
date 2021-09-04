@@ -86,3 +86,17 @@
                                     (keys album)))))
   (add-album album)
   album)
+
+(defn remove-album [album-id artist-id]
+  (wcar* (car/srem (str "artist:" artist-id ":albums") album-id)
+         (car/del (str "album:" album-id ":name"))
+         (car/del (str "album:" album-id))))
+
+(defn delete-album [album-id]
+  (let [album (get-album album-id)]
+    (add-event "Delete album"
+               (apply hash-map (flatten
+                              (mapv #(get-album-key-value-as-string album %)
+                                    (keys album)))))
+    (remove-album album-id (get album :artist-id))
+    album))

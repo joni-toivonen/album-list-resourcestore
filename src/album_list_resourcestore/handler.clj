@@ -1,6 +1,6 @@
 (ns album-list-resourcestore.handler
   (:require [album-list-resourcestore.artist :as artist :refer [get-artists get-albums-from-artist post-artist]]
-            [album-list-resourcestore.album :as album :refer [get-album post-album put-album album-exists?]]
+            [album-list-resourcestore.album :as album :refer [get-album post-album put-album delete-album album-exists?]]
             [album-list-resourcestore.event :as event :refer [get-events]]
             [album-list-resourcestore.discogs :as discogs :refer [search]]
             [compojure.api.sweet :refer :all]
@@ -87,6 +87,14 @@
             :body [album Album]
             :summary "adds an album to the database and also the artist if it does not exist yet (in redis adds an album hash with given data as 'album:id'. Then in redis gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' strings and sees if the artist name in the body exists. If it does, then pushes the created albumId to the 'artist:id:albums' SET. Else creates new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name and then pushes the created albumId to the 'artist:id:albums' SET)"
             (ok (post-album album)))
+
+      (DELETE "/albums/:albumId" []
+              :return Album
+              :path-params [albumId :- s/Uuid]
+              :summary "removes an album from the database (in redis removes the album from 'artist:id:albums' SET, album:id:name key and the 'album:id' album hash)"
+              (if (album-exists? albumId)
+                (ok (delete-album albumId))
+                (not-found (str "No such album with id " albumId))))
 
       (GET "/search" [barcode]
            :summary "returns a list of all artists as array of artists with id and name (in redis first gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' STRINGs)"
