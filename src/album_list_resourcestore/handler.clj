@@ -3,6 +3,7 @@
             [album-list-resourcestore.album :as album :refer [get-album post-album put-album delete-album album-exists?]]
             [album-list-resourcestore.event :as event :refer [get-events]]
             [album-list-resourcestore.discogs :as discogs :refer [search]]
+            [clojure.tools.logging :as log :refer :all]
             [compojure.api.sweet :refer :all]
             [ring.util.http-response :refer :all]
             [schema.core :as s]))
@@ -78,6 +79,7 @@
            :path-params [albumId :- s/Uuid]
            :body [album Album]
            :summary "updates an album in the database and also adds an artist if it does not exist yet (in redis gets the album HASH from 'album:id' and compares if the artist is updated. If it is, then removes the album id from 'artist:id:albums' and adds it to the correct artist's SET if it exists. If the updated artist name does not exist in 'artist:id:name' then creates a new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name'. Also if the album name has changed, updates the old name STRING 'album:id:name'. After that it updates the HASH with given data.)"
+           (log/info "PUT album" album)
            (if (album-exists? albumId)
              (ok (put-album album))
              (not-found (str "No such album with id " albumId))))
@@ -86,6 +88,7 @@
             :return Album
             :body [album Album]
             :summary "adds an album to the database and also the artist if it does not exist yet (in redis adds an album hash with given data as 'album:id'. Then in redis gets an artists SET 'artists' which consists of artist IDs, then gets the names of those artists from 'artist:id:name' strings and sees if the artist name in the body exists. If it does, then pushes the created albumId to the 'artist:id:albums' SET. Else creates new artistId and pushes it to the 'artists' SET and also adds a new string with the artist name to 'artist:id:name and then pushes the created albumId to the 'artist:id:albums' SET)"
+            (log/info "POST album" album)
             (ok (post-album album)))
 
       (DELETE "/albums/:albumId" []

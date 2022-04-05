@@ -1,6 +1,7 @@
 (defproject album-list-resourcestore "0.1.0-SNAPSHOT"
   :description "REST backend that takes requests via HTTP and stores music album list data in Redis database"
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/tools.logging "1.2.4"]
                  [metosin/compojure-api "1.1.11"]
                  [com.taoensso/carmine "2.19.1"]
                  [cheshire "5.5.0"]
