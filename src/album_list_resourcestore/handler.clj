@@ -95,6 +95,7 @@
               :return Album
               :path-params [albumId :- s/Uuid]
               :summary "removes an album from the database (in redis removes the album from 'artist:id:albums' SET, album:id:name key and the 'album:id' album hash)"
+              (log/info "DELETE album" albumId (album-exists? albumId))
               (if (album-exists? albumId)
                 (ok (delete-album albumId))
                 (not-found (str "No such album with id " albumId))))
