@@ -16,12 +16,12 @@ services:
 
   redis:
     image: redis:4.0.5-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--save", "60", "1"]
     hostname: redis
     networks:
       - redis-net
     volumes:
-      - redis-data:/data
+      - ./redis-data:/data
 
   kong-migrations:
     image: "${KONG_DOCKER_TAG:-kong:latest}"
